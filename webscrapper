@@ -1,0 +1,61 @@
+!pip install requests
+!pip install beautifulsoup4
+
+
+import requests
+from bs4 import BeautifulSoup
+
+def scrape_reviews(url):
+    # Send a GET request to the URL
+    response = requests.get(url)
+    
+    # Check if the request was successful
+    if response.status_code == 200:
+        # Parse the HTML content of the page
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        # Find the container elements that hold the reviews
+        review_containers = soup.find_all('div', class_='review-container')
+        
+        # Initialize lists to store scraped data
+        reviews = []
+        ratings = []
+        comment_tags = []
+        customer_names = []
+        
+        # Loop through each review container
+        for container in review_containers:
+            # Extract review text
+            review = container.find('div', class_='review-text').get_text().strip()
+            reviews.append(review)
+            
+            # Extract rating
+            rating = container.find('span', class_='star-rating').get('aria-label').split()[0]
+            ratings.append(rating)
+            
+            # Extract comment tags (if available)
+            comment_tag = container.find('div', class_='comment-tag').get_text().strip() if container.find('div', class_='comment-tag') else None
+            comment_tags.append(comment_tag)
+            
+            # Extract customer name (if available)
+            customer_name = container.find('span', class_='customer-name').get_text().strip() if container.find('span', class_='customer-name') else None
+            customer_names.append(customer_name)
+        
+        # Return the scraped data as a dictionary
+        return {
+            'reviews': reviews,
+            'ratings': ratings,
+            'comment_tags': comment_tags,
+            'customer_names': customer_names
+        }
+    else:
+        print("Failed to fetch data. Status code:", response.status_code)
+
+# Example usage:
+url = 'https://www.example.com/product-page/reviews'
+scraped_data = scrape_reviews(url)
+if scraped_data:
+    print("Reviews:", scraped_data['reviews'])
+    print("Ratings:", scraped_data['ratings'])
+    print("Comment Tags:", scraped_data['comment_tags'])
+    print("Customer Names:", scraped_data['customer_names'])
